@@ -1,9 +1,9 @@
-import type { PrismaClient } from '../../generated/prisma/client.ts';
+import type { PrismaClient, User } from '../../generated/prisma/client.ts';
 import type {
-  UserCreateInput,
+  RegisterUserData,
   UserCreateWithoutProfileInput,
   UserCreateWithoutReviewsInput,
-} from '../../generated/prisma/models.ts';
+} from '../zod/user.schemas.ts';
 import { env } from '../config/env.ts';
 import debug from 'debug';
 import { AuthService } from '../services/auth.ts';
@@ -20,15 +20,27 @@ export class UserRepo {
   // CRUD de lo que más nos interesa
 
   // En el caso de nuestros Users nos interesa primero registro y login
-  async register(userData: UserCreateInput) {
-    userData.password = await AuthService.hash(userData.password);
-    const result = await this.prisma.user.create({
-      data: userData,
-      omit: { password: true },
-      include: { profile: true },
-    });
-    return result;
-  }
+async register(userData: RegisterUserData): Promise<User> {
+        log('Registering user with email %s', userData.email);
+        const hashedPassword = await AuthService.hash(userData.password);  //Sacamos la password fuera de nuestros datos para no la perdamos si se pierden los datos.
+        const result = await this.prisma.user.create({
+            data: {
+                email: userData.email,
+                password: hashedPassword,
+                profile: {
+                    create: userData.profile,
+                },
+            },
+            include: {
+                profile: true,
+            },
+            // omit: {
+            //     password: true,
+            // },
+        });
+
+        return result as User;
+    }
   async login(
     userData: UserCreateWithoutReviewsInput & UserCreateWithoutProfileInput,
   ) {
