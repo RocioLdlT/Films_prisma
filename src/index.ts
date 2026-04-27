@@ -48,7 +48,26 @@ const listenManager = () => {
 //     response.end(errorInfo);
 // };
 
-server.on('listening', listenManager);
-// server.on('error', errorManager);
-server.listen(port);
+
+const startServer = async () => {
+    log('Starting API server...');
+    const prisma = await connectDB();
+    const app = createApp(prisma);
+    const port = env.PORT || 3000;
+    const server = createServer(app);
+    log('Server created');
+    server.listen(port);
+    server.on('listening', listenManager);
+    // server.on('error', errorManager);
+    return server
+};
+
+const server = await startServer().catch((error) => {
+    log('Error starting server:', error);
+    process.exit(1);
+});
+
+// server.on('listening', listenManager);
+// // server.on('error', errorManager);
+// server.listen(port);
 
