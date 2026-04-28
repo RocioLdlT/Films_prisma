@@ -7,14 +7,15 @@ import { PrismaClient } from '../../generated/prisma/client.ts';
 const log = debug(`${env.PROJECT_NAME}:configDB`);
 log("Loaded database connection...");
 
-export const connectDB = async () => {
-    // const pool = new Pool({
-    //     user: env.PGUSER,
-    //     password: env.PGPASSWORD,
-    //     host: env.PGHOST,
-    //     port: env.PGPORT,
-    //     database: env.PGDATABASE
+const globalOmit = {
+    user: {
+        password: true,
+    },
+} as const;
 
+export type AppPrismaClient = PrismaClient<never, typeof globalOmit>;
+
+export const connectDB = async (): Promise<AppPrismaClient> => {
     const adapter = new PrismaPg({
         user: env.PGUSER,
         password: env.PGPASSWORD,
@@ -24,7 +25,8 @@ export const connectDB = async () => {
     });
 
     const prisma = new PrismaClient({
-        adapter
+        adapter,
+        omit: globalOmit
     })
     // Para probar la conexión
     try {
