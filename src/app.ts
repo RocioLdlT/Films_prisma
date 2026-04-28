@@ -7,16 +7,20 @@ import { customHeaders } from './middleware/customs.ts';
 import { errorHandler } from './middleware/error-handler.ts';
 import { HttpError } from './errors/http-error.ts';
 import { HomeView } from './views/home.ts';
-import { apiController } from './controllers/api.ts';
+// import { apiController } from './controllers/api.ts';
 // import { AnimalsRepo } from './animals/repositories/animals.ts';
 // import { AnimalsController } from './animals/controllers/animals.ts';
 // import { AnimalsRouter } from './animals/routers/animals.valid.ts';
 // import type { Pool } from 'pg';
-import type { PrismaClient } from '@prisma/client/extension';
+
+import {AppPrismaClient} from './config/db.ts';
+import { UsersRepo } from './users/repos/users.repo.ts';
+import { UsersController } from './users/controllers/users.controller.ts';
 
 const log = debug(`${env.PROJECT_NAME}:app`);
 log('Loading application...');
-export const createApp = (prisma: PrismaClient) => {
+
+export const createApp = (prisma: AppPrismaClient) => {
     log('Starting Express app...');
     const app = express();
     app.disable('x-powered-by');
@@ -45,12 +49,16 @@ export const createApp = (prisma: PrismaClient) => {
         return res.send(await HomeView.render());
     });
    
-    app.get('/api', apiController);
-
+    // app.get('/api', apiController);
     // const animalRepo = new AnimalsRepo(prisma);
     // const animalController = new AnimalsController(animalRepo);
     // const animalRouter = new AnimalsRouter(animalController);
     // app.use('/api/animals', animalRouter.router);
+    
+    const appRepo = new UsersRepo(prisma);
+    const appController = new UsersController(appRepo);
+    const appRouter = new UsersRouter(appController);
+    app.use('/api/users', appRouter.router);
 
     app.use((_req, _res, next) => {
         log('Calling errorHandler for 404 error');
