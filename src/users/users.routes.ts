@@ -14,9 +14,9 @@ const log = debug(`${env.PROJECT_NAME}:router:users`);
 log('Loading users router...');
 
 export class UsersRouter {
-  private controller: UsersController;
-  private router: Router;
-  private authInterceptor: AuthInterceptor;
+  private controller: UsersController; //Interceptamos controller
+  private router: Router; // Vamos a crear router
+  private authInterceptor: AuthInterceptor;// Añadimos los interceptores (podemos realizarlo sin este...)
   constructor(controller: UsersController, authInterceptor: AuthInterceptor) {
     log('Initializing users router...');
     this.controller = controller;
