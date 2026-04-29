@@ -13,14 +13,21 @@ import { HomeView } from './views/home.ts';
 // import { AnimalsRouter } from './animals/routers/animals.valid.ts';
 // import type { Pool } from 'pg';
 
-import {AppPrismaClient} from './config/db.ts';
-import { UsersRepo } from './users/repos/users.repo.ts';
-import { UsersController } from './users/controllers/users.controller.ts';
+import type {AppPrismaClient} from './config/db.ts';
+import { UsersRepo } from './users/users.repo.ts';
+import { UsersController } from './users/users.controller.ts';
+import { UsersRouter } from './users/users.routes.ts';
+import { AuthInterceptor } from './middleware/auth.interceptor.ts';
+import type { TokenPayload } from './types/login.ts';
 
-const log = debug(`${env.PROJECT_NAME}:app`);
-log('Loading application...');
+declare module 'express' {
+    interface Request {
+        user?: TokenPayload;
+    }
+}
 
 export const createApp = (prisma: AppPrismaClient) => {
+    const log = debug(`${env.PROJECT_NAME}:app`);
     log('Starting Express app...');
     const app = express();
     app.disable('x-powered-by');
@@ -56,9 +63,10 @@ export const createApp = (prisma: AppPrismaClient) => {
     // app.use('/api/animals', animalRouter.router);
     
     const appRepo = new UsersRepo(prisma);
+    const authInterceptor = new AuthInterceptor
     const appController = new UsersController(appRepo);
-    const appRouter = new UsersRouter(appController);
-    app.use('/api/users', appRouter.router);
+    const appRouter = new UsersRouter(appController, authInterceptor);
+    app.use('/api/users', appRouter.router1);
 
     app.use((_req, _res, next) => {
         log('Calling errorHandler for 404 error');
